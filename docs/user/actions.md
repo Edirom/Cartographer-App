@@ -202,6 +202,8 @@ redo. Up to 50 previous states are kept.
 Use the **Previous** <i class="fa-solid fa-chevron-left"></i> and **Next** <i class="fa-solid fa-chevron-right"></i> navigation buttons in the sidebar.
 To jump to a specific page, type the page number into the current-page field in the sidebar and press **Enter**.
 
+The Content Preview panel can be used to quickly navigate between different MDIVs. Click on an MDIV entry to jump to the first measure of that MDIV.
+
 ---
 
 ## Create a New Movement

@@ -1,4 +1,5 @@
 <template>
+  <!-- Measurement division container with click handler to select and navigate -->
   <div
     :class="['contentPreviewMdiv', { active: isActive}]"
     @click="selectAndJumpToMdiv"
@@ -36,6 +37,7 @@ export default {
     } */
   },
   methods: {
+    // Selects this mdiv in the store and navigates to the first zone of the first measure
     selectAndJumpToMdiv: function () {
       this.$store.dispatch("setCurrentMdiv", this.mdiv.id);
       const measures = this.$store.getters.measuresByMdivId(this.mdiv.id);
@@ -49,6 +51,7 @@ export default {
         }
       }
     },
+    // Searches the XML document for a zone by ID and returns the page index of its parent surface
     findPageIndexByZoneId: function (zoneId) {
       if (!this.$store.getters.isReady) return -1;
 
@@ -56,7 +59,6 @@ export default {
       const zones = xmlDoc.querySelectorAll("zone");
 
       for (const zone of zones) {
-        // of-Loop ist modern und effizient
         if (zone.getAttribute("xml:id") === zoneId) {
           const surface = zone.closest("surface");
           const surfaces = xmlDoc.querySelectorAll("surface");
@@ -72,8 +74,10 @@ export default {
 <style lang="scss" scoped>
 @import "@/css/_variables.scss";
 
+/* Add spacing between consecutive mdiv sections */
 .contentPreviewMdiv + .contentPreviewMdiv {
   margin-top: 0.5rem;
+  /* Highlight the currently active mdiv */
   &.active {
     background-color: lighten($appColor, 30%);
 
@@ -84,6 +88,7 @@ export default {
 }
 
 .contentPreviewMdiv {
+  /* Style the mdiv label heading with pointer cursor for interactivity */
   h1 {
     font-weight: 700;
     font-size: 0.8rem;
