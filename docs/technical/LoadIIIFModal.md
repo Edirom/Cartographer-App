@@ -41,7 +41,7 @@ _None_
 | Name        | Description                                                      |
 |-------------|------------------------------------------------------------------|
 | useTestUri  | Autofills the input with a test IIIF manifest URL                |
-| main        | Triggers import action if the input is a valid URL, then closes the modal |
+| main        | Triggers the `importIIIF` action if the input is a valid URL, closes the modal, then dispatches `resetAll` |
 | closeModal  | Closes the modal dialog                                          |
 
 ---

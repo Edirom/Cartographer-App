@@ -1,66 +1,55 @@
-# Cartographer App
+# Getting Started
 
-The Cartographer App is used to provide placement information of zones of interest
-in (historical) documents. The first and foremost use case is the identification
-of bounding boxes of measures in music documents. It is a successor of the
-*Vertaktoid*, but other than that uses web technology and is thus platform
-independent. It optionally uses the *Measure Detector* for automatic recognition
-of measure positions, but allows manual correction of these results.
+Choose the option appropriate for your platform.
 
+## Browser
 
-## Important Tools and their Documentation
+No installation is required. Open the application URL provided by your
+institution, for example <https://cartographer-app.zenmem.de/>.
 
-* Vectre, which is a VueJS version of Spectre CSS. See https://vectrejs.github.io/docs/#/pages/getting-started
-* OpenSeadragon. See http://openseadragon.github.io/
-* Annotorious OpenSeadragon Plugin. See https://recogito.github.io/annotorious/getting-started/osd-plugin/
+## Native application
 
+Cartographer can be distributed as a native application for Windows, macOS,
+Linux, and Android. Download the package for your platform from the
+[releases page](https://github.com/Edirom/cartographer-app/releases) or use the
+download provided by your institution.
 
-## Project setup
-```
-npm install
-```
+Only install native packages from a trusted source. Android packages may need
+to be approved for installation if they are distributed outside an app store;
+follow your institution's installation guidance.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+### macOS: "Apple could not verify... is free of malware"
 
-### Compiles and minifies for production
-```
-npm run build
-```
+Cartographer's macOS builds are not currently notarized by Apple. Downloading
+the `.dmg`/`.app` through a browser marks it as quarantined, so macOS shows
+this warning when you first try to open it — this is expected for any
+non-notarized app and does not mean the download is unsafe. To open it:
 
-### Run your unit tests
-```
-npm run test:unit
-```
+1. Try to open the app once (you'll see the warning) → **OK**.
+2. Go to **System Settings → Privacy & Security**, scroll down to the blocked
+   app notice, and click **Open Anyway**.
+3. Try opening the app again and confirm **Open**.
 
-### Lints and fixes files
-```
-npm run lint
-```
+### Android: "install blocked" / unknown sources
 
-### Other approaach to linting which automatically fixes code and gives a nicer rendition of errors using snazzy
-```
-npm run test:lint
-```
+Android shows an "install from unknown sources" style warning for **any** APK
+installed outside the Play Store or your device manufacturer's app store —
+this happens whether or not the APK is signed, and is not specific to
+Cartographer. Follow your device's on-screen prompt to allow the install
+(usually **Settings → allow this source**, then retry the install).
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## GitHub login on Android and desktop
 
-### Biuld your image 
-Replace **`cartographer`** with your preferred image name.
-```
-docker build -t cartographer .
+Native Tauri applications use GitHub Device Flow rather than redirecting back
+to the application through a callback URL:
 
-```
+1. Open the application menu and select **Login with GitHub**.
+2. Copy the temporary code displayed by Cartographer.
+3. Open <https://github.com/login/device> in a browser.
+4. Enter the code and authorize Cartographer.
+5. Return to Cartographer and wait for login to complete automatically.
 
-### Run 
-
-Replace **demo** with your desired subpath.
-
-Replace **cartographer** with the image name you used when building.
-```
-docker run --rm -p 8080:80 -e VUE_APP_PUBLIC_PATH=/demo cartographer
-```
-
+The browser can be on the same device or another trusted device. Only enter a
+code when you initiated the login yourself. See
+[Importing from a GitHub repository](./actions.md#importing-from-a-github-repository)
+for the complete workflow.

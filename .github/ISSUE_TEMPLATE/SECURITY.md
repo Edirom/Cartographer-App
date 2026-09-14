@@ -1,6 +1,6 @@
 # Reporting Security Issues
 
-We take security vulnerabilities in **Cartographer** seriously and appreciate your efforts to report them responsibly. We are committed to acknowledging your contributions and responding quickly.
+We take security vulnerabilities in **Cartographer App** seriously and appreciate your efforts to report them responsibly. We are committed to acknowledging your contributions and responding quickly.
 
 ## Reporting a Vulnerability
 
@@ -20,4 +20,5 @@ For security issues in third-party dependencies, we recommend reporting directly
 
 ## Supported Versions
 
-Security updates are provided for the [latest official release](https://github.com/Edirom/cartographer-app/releases/latest) of Cartographer. We do not guarantee security patches for older versions.
+Security updates are provided for the [latest official release](https://github.com/Edirom/cartographer-app/releases/latest) of Cartographer App. 
+We do not guarantee security patches for older versions.

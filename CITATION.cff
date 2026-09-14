@@ -7,6 +7,9 @@ authors:
 - family-names: "Dennis"
   given-names:  "Friedl"
   orcid: "https://orcid.org/0009-0000-4410-4627" 
+- family-names: "Daniel"
+  given-names:  "Jettka"
+  orcid: "https://orcid.org/0000-0002-2375-2227"
 - family-names: "Johannes" 
   given-names: "Kepper"
   orcid: "https://orcid.org/0000-0003-4891-260X"
@@ -19,8 +22,11 @@ authors:
 - family-names: "Peter"
   given-names: "Stadler"
   orcid: "https://orcid.org/0000-0002-2544-1481"
+- family-names: "Jan-Peter"
+  given-names: "Voigt"
+  orcid: "https://orcid.org/0009-0006-9881-197X"
 title: "cartographer-app" 
-version: v1.0.0
-doi: 10.5281/zenodo.1234
-date-released: 2025-10-01
+version: v2.0.0
+doi: 10.5281/zenodo.17396487
+date-released: 2026-08-11
 url: "https://github.com/Edirom/cartographer-app"

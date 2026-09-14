@@ -1,0 +1,58 @@
+# Edirom Online Contributing Guidelines
+
+- [How to contribute](#how-to-contribute)
+  * [Bug reports](#bug-reports)
+  * [Feature requests](#feature-requests)
+  * [Contributing code and documentation](#contributing-code-and-documentation)
+    + [Commit messages](#commit-messages) 
+- [Release Process](#release-process)
+- [Versioning](#versioning)
+
+## How to contribute
+
+Cartographer App is a free and open-source software and we appreciate to receive contributions from our community!  
+So first of all, thank you for considering contributing to Cartographer! When you do so, please try to follow these guidelines.
+
+### Bug reports
+
+If you think you found a bug in Cartographer, first please search our [issues list](https://github.com/Edirom/cartographer-app/issues) in case a similar issue has already been opened. If not, please [open an issue](https://github.com/Edirom/cartographer-app/issues/new?assignees=&labels=&projects=&template=problem-report.md&title=%5BBUG%5D). We implemented a [template](https://github.com/Edirom/cartographer-app/blob/dev/.github/ISSUE_TEMPLATE/bug_report.md) for problems and bugs to get as much information about the bug as possible, e.g. how the problem can be reproduced. Provide as much information as you can.
+
+### Feature requests
+
+If you think, Cartographer App should have a feature that does not exist already, please search our [issues list](https://github.com/Edirom/cartographer-app/issues) in case a wish for a similar feature was already reported. If not, please [open an issue](https://github.com/Edirom/cartographer-app/issues/new?assignees=&labels=&projects=&template=problem-report.md&title=%5BFeature%5D) and describe the feature using our [template](https://github.com/Edirom/cartographer-app/blob/dev/.github/ISSUE_TEMPLATE/feature_request.md) for new features. 
+
+### Contributing code and documentation
+
+If you would like to contribute to Cartographer App developing a new feature or working on a bug fix, your contribution is highly appreciated and we kindly ask you to take the following guidelines into concern. 
+The active contributors have agreed to organise their work along the so-called 'git-flow-workflow' ([Driessen 2010](https://nvie.com/posts/a-successful-git-branching-model/)) to foster a clean and traceable development process. The following instructions will ensure this workflow.
+
+* Check the [network graph](https://github.com/Edirom/cartographer-app/network) to see all the other forks of other persons to make sure, nobody else is already working on the topic, you want to start to address.
+* Please discuss your idea first in an [issue](https://github.com/Edirom/cartographer-app/issues). If there is no issue for your idea yet, please **open an issue**. There might be different ways to solve a problem and we want to make sure to find the right approach before spending time on a PR that cannot be merged.
+* **Fork** the `Edirom/cartographer-app` repository into your own account, e.g. `username/cartographer-app`. (Exception: If you plan to develop in a team (only in this case!), open a dedicated branch on the cartographer-app repository.)
+* Create a **dedicated branch** for your fix or feature on your repository, e.g. for a feature request, that was discussed in issue number 123 `ftr-123-some-new-feature`
+* Make your changes, while you can commit to your branch as many times as you like.
+* After finishing your work, you can open a **pull request** to `Edirom/cartographer-app` and make sure, that you MUST address the `dev` branch.
+* Each pull request should implement ONE feature or bugfix. If you want to add or fix more than one thing, submit more than one pull request.
+* Update the user and technical documentation at [docs](https://github.com/Edirom/cartographer-app/tree/main/docs) based on your changes.
+* Your submission will be **reviewed** afterwards. If you are asked to make changes, you can push these changes to your original branch and the pull request will be automatically updated.
+* You may then delete your dedicated branch, after your pull request was merged into the `Edirom/cartographer-app` repository.
+
+#### Commit messages
+
+Please make sure to provide meaningful and understandable commit messsages, that should have the following structure and content:
+* `summary`: use imperative and summarize changes in around 50 characters or less, e.g. "Remove deprecated methods"  
+* `body`: explain what, why and how e.g. "This commit adds ... Specifically, we have added ..."
+* `footer`: reference or close issues using e.g. `Refs #123, 456` or `Refs #206`or `Fixes #210` or `Closes #789`
+
+## Release Process
+
+Releases are discussed and declared by the Edirom community. The planned scope of features and bug fixes of upcoming releases can be read from corresponding [milestones](https://github.com/Edirom/cartographer-app/issues?q=is%3Aissue%20state%3Aopen%20milestone), and eventually you can also see here  where contributions are most urgent needed. 
+
+The most recent 'stable' version of Cartographer App is always found on the 'main' branch, where all releases are tagged from. The most recent 'work in progress' is found on the 'develop' branch. 
+
+## Versioning
+
+The Cartographer App Versions follow the ['semantic' versioning scheme](http://semver.org), 'X.Y.Z'. 'X' is a major release, often defined by the presence of backward-incompatible changes to the schema. 'Y' is a minor release, defined by backward compatible changes (i.e., added, but not removed, features). 'Z' is the 'patch' number, indicating a release that fixes or clarifies existing functionality.
+
+
+

@@ -15,9 +15,9 @@
         </fileDesc>
         <encodingDesc>
             <appInfo>
-                <application xml:id="mercatorApp">
-                    <name>Mercator-App</name>
-                    <ptr target="https://github.com/Edirom/mercator-app"/>
+                <application xml:id="cartographer-app">
+                    <name>cartographer-app</name>
+                    <ptr target="https://github.com/Edirom/cartographer-app"/>
                 </application>
             </appInfo>
         </encodingDesc>
@@ -30,7 +30,7 @@
                 <changeDesc>
                     <p>
                         File initially generated from IIIF Manifest available at <ptr/>,
-                        using <ptr target="#mercatorApp"/>. This is a generic converter,
+                        using <ptr target="#cartographer-app"/>. This is a generic converter,
                         so the resulting file may require considerable adjustments to
                         match local practice.
                     </p>

@@ -33,10 +33,6 @@ export function meiZone2annotorious (mei, zoneInput, pageUri) {
     })
   }
 
-  if (measures.length === 0) {
-    console.error('\nHouston!!!')
-  }
-
   const mdivIds = []
   mei.querySelectorAll('mdiv').forEach(mdiv => { mdivIds.push(mdiv.getAttribute('xml:id')) })
 
@@ -416,7 +412,6 @@ export function updateMdiv(xmlDoc, nodeToMove, state, currentZone, pageIndex, ta
  * @return {[type]}             [description]
  */
 export function insertMeasure (xmlDoc, measure, state, currentZone, pageIndex, targetMdiv,additionalZone) {
-  console.log("line 419 insertMeasure called with state ", state.additionMeasure)
   const surfaceIDs = []
   xmlDoc.querySelectorAll('surface').forEach(surface => {
     surfaceIDs.push(surface.getAttribute('xml:id'))
@@ -1307,11 +1302,11 @@ export function moveContentToMdiv (xmlDoc, firstMeasureId, targetMdivId, state )
  * @param {[type]} width   [description]
  * @param {[type]} height  [description]
  */
-export function addImportedPage (xmlDoc, index, url, width, height) {
+export function addImportedPage (xmlDoc, index, url, width, height, label) {
   const surface = document.createElementNS('http://www.music-encoding.org/ns/mei', 'surface')
   surface.setAttribute('xml:id', 's' + uuid())
   surface.setAttribute('n', index + 1)
-  surface.setAttribute('label', index + 1)
+  surface.setAttribute('label', label || String(index + 1))
   surface.setAttribute('ulx', 0)
   surface.setAttribute('uly', 0)
   surface.setAttribute('lrx', width)

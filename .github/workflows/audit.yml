@@ -1,0 +1,53 @@
+name: npm audit
+
+# Security audit of npm dependencies. Runs on pushes and PRs that touch the
+# dependency manifests, plus a weekly scheduled scan so newly-disclosed
+# advisories are caught even without code changes.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - package.json
+      - package-lock.json
+      - docs/package.json
+      - .github/workflows/audit.yml
+  pull_request:
+    paths:
+      - package.json
+      - package-lock.json
+      - docs/package.json
+      - .github/workflows/audit.yml
+  schedule:
+    # Every Monday at 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        # The project has a known peer-dependency conflict (vue3-jest vs
+        # cli-plugin-unit-jest); the Dockerfile and build workflows use the
+        # same flag.
+        run: npm install --legacy-peer-deps
+
+      # Informational: full audit (dev + prod) is reported but never fails the
+      # job. Most remaining findings are in the Vue CLI 5 / webpack-dev-server
+      # build toolchain, which has no upstream fix short of migrating to Vite.
+      - name: Full audit (informational)
+        run: npm audit || true
+
+      # Gate: fail only on HIGH or CRITICAL advisories in *production*
+      # (runtime) dependencies — the ones that actually ship in the app.
+      - name: Production audit (gate)
+        run: npm audit --omit=dev --audit-level=high

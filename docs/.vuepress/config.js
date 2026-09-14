@@ -20,6 +20,7 @@ const EN_SIDEBAR = [
     collapsible: true,
     link: "/technical/README.md",
     children: [
+      "/technical/Auth.md",
       {
         text: "Components",
         collapsible: true,
@@ -30,9 +31,11 @@ const EN_SIDEBAR = [
           "/technical/ContentPreviewMdiv.md",
           "/technical/ContentPreviewMeasure.md",
           "/technical/ContentPreviewPane.md",
+          "/technical/ImageMismatchModal.md",
           "/technical/ImageSelectionModal.md",
           "/technical/LoadGitModal.md",
           "/technical/LoadIIIFModal.md",
+          "/technical/LoadLocalImage.md",
           "/technical/LoadXMLModal.md",
           "/technical/MainMenu.md",
           "/technical/MeasureModal.md",
@@ -40,7 +43,8 @@ const EN_SIDEBAR = [
           "/technical/OsdComponent.md",
           "/technical/PageImportModal.md",
           "/technical/PagesListEntry.md",
-          "/technical/PagesModal.md"
+          "/technical/PagesModal.md",
+         "/technical/storeIndex.md" 
         ]
       },
       {
@@ -65,12 +69,15 @@ const EN_SIDEBAR = [
 export default defineUserConfig({
   base: '/myAppPlaceholder/docs/',
 
+  head: [
+    ['link', { rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css' }]
+  ],
   bundler: viteBundler(),
 
   locales: {
     '/': {
       lang: 'en-US',
-      title: 'Cartographer User and Technical Documentation',
+      title: 'Cartographer App User and Technical Documentation',
       description: 'User and Technical Documentation',
     },
   },
@@ -88,3 +95,4 @@ export default defineUserConfig({
     },
   }),
 });
+

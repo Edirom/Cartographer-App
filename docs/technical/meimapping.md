@@ -1,4 +1,4 @@
-# MEI Mapping Tools (`src/tools/meimapping.js`)
+# MEI Mapping Tools (`src/tools/meiMappings.js`)
 
 Helper functions to convert between MEI zones, Annotorious annotations, detected rectangles, and to manipulate measures/mdivs.  
 This includes both **exported functions** (public API) and **internal helpers** (not exported but important for maintainers).
@@ -65,11 +65,31 @@ export function generateMeasure () { ... }
 
 ---
 
-### `insertMeasure(xmlDoc, measure, state, currentZone, pageIndex, targetMdiv)`
+### `updateMdiv(xmlDoc, nodeToMove, state, currentZone, pageIndex, targetMdiv)`
+Moves a measure (and its surrounding block) from its current movement into another movement, renumbering measures and removing any resulting empty sections/mdivs. Returns a Promise.
+
+```js
+export function updateMdiv (xmlDoc, nodeToMove, state, currentZone, pageIndex, targetMdiv) { ... }
+```
+
+**Parameters**  
+- `xmlDoc {Document}` – MEI document  
+- `nodeToMove {Element}` – The measure to move  
+- `state {Object}` – Vuex state (uses `selectedMdiv`, `currentMdiv`, `currentMeasure`)  
+- `currentZone {Element|string}` – Zone associated with the move (unused placeholder in some calls)  
+- `pageIndex {number}` – Page index (unused placeholder in some calls)  
+- `targetMdiv {Element}` – Destination movement  
+
+**Returns**  
+- `{Promise<Element>}` – Resolves to the resulting current measure (or the moved node)  
+
+---
+
+### `insertMeasure(xmlDoc, measure, state, currentZone, pageIndex, targetMdiv, additionalZone)`
 Inserts a `<measure>` into the MEI.
 
 ```js
-export function insertMeasure (xmlDoc, measure, state, currentZone, pageIndex, targetMdiv) { ... }
+export function insertMeasure (xmlDoc, measure, state, currentZone, pageIndex, targetMdiv, additionalZone) { ... }
 ```
 
 **Parameters**  
@@ -79,6 +99,7 @@ export function insertMeasure (xmlDoc, measure, state, currentZone, pageIndex, t
 - `currentZone {Element}` – Zone for this measure  
 - `pageIndex {number}` – Page index  
 - `targetMdiv {Element}` – Target movement  
+- `additionalZone {Element?}` – Optional additional zone  
 
 ---
 
@@ -103,6 +124,22 @@ Adds a zone to the last `<measure>` in the MEI.
 ```js
 export function addZoneToLastMeasure (xmlDoc, zoneId) { ... }
 ```
+
+---
+
+### `getPrecedingZoneNoMatterWhere(xmlDoc, zone)`
+Returns the nearest preceding `<zone>` relative to a reference zone, searching earlier siblings and, if none are found, the last zone on a previous page.
+
+```js
+export function getPrecedingZoneNoMatterWhere (xmlDoc, zone) { ... }
+```
+
+**Parameters**  
+- `xmlDoc {Document}` – MEI DOM  
+- `zone {Element}` – Reference zone  
+
+**Returns**  
+- `{Element|null}` – Nearest preceding zone, or `null`  
 
 ---
 
@@ -168,6 +205,38 @@ export function addImportedPage (xmlDoc, index, url, width, height) { ... }
 
 ---
 
+### `getPreviousMeasure(currentMeasure, xmlDoc)`
+Returns the closest preceding `<measure>` sibling of a given measure.
+
+```js
+export function getPreviousMeasure (currentMeasure, xmlDoc) { ... }
+```
+
+**Parameters**  
+- `currentMeasure {Element}` – The reference measure  
+- `xmlDoc {Document}` – MEI DOM  
+
+**Returns**  
+- `{Element|null}` – The preceding measure, or `null`  
+
+---
+
+### `addZoneToExisingMeasure(precedingMeasure, newZone)`
+Adds a zone reference to a measure's `@facs` attribute if it is not already present.
+
+```js
+export function addZoneToExisingMeasure (precedingMeasure, newZone) { ... }
+```
+
+**Parameters**  
+- `precedingMeasure {Element}` – The `<measure>` to update  
+- `newZone {Element}` – The `<zone>` to reference  
+
+**Returns**  
+- `{boolean}` – `true` if the zone was added, `false` if already present or on invalid input  
+
+---
+
 ## Internal Helpers
 
 ### `incrementMeasureNum(num, diff)`
@@ -180,6 +249,22 @@ function incrementMeasureNum (num, diff) {
 **Parameters**  
 - `num {string|number}` – Current measure number  
 - `diff {number}` – Amount to add  
+
+**Returns**  
+- `{number}` – New measure number  
+
+---
+
+### `decrementMeasureNum(num, diff)`
+```js
+function decrementMeasureNum (num, diff) {
+  return parseInt(num) - diff
+}
+```
+
+**Parameters**  
+- `num {string|number}` – Current measure number  
+- `diff {number}` – Amount to subtract  
 
 **Returns**  
 - `{number}` – New measure number  
@@ -216,20 +301,6 @@ function getPrecedingZone (xmlDoc, surface) { ... }
 
 ---
 
-### `getPrecedingZoneNoMatterWhere(xmlDoc, zone)`
-```js
-function getPrecedingZoneNoMatterWhere (xmlDoc, zone) { ... }
-```
-
-**Parameters**  
-- `xmlDoc {Document}` – MEI DOM  
-- `zone {Element}` – Reference zone  
-
-**Returns**  
-- `{Element|null}` – Nearest preceding zone  
-
----
-
 ### `getMeasuresFromZone(xmlDoc, zone)`
 ```js
 function getMeasuresFromZone (xmlDoc, zone) { ... }
@@ -258,6 +329,19 @@ function getZonesFromMeasure (xmlDoc, measure) { ... }
 
 ---
 
+### `addMultRest(precedingMeasure)`
+```js
+function addMultRest (precedingMeasure) { ... }
+```
+
+**Parameters**  
+- `precedingMeasure {Element}` – Measure to inspect  
+
+**Returns**  
+- `{number|null}` – The `<multiRest>` `num` value (when positive), otherwise `null`  
+
+---
+
 ## Example Usage
 
 ```js
@@ -275,7 +359,7 @@ import {
   moveContentToMdiv,
   addImportedPage,
   ...
-} from '@/tools/meimapping.js'
+} from '@/tools/meiMappings.js'
 
 // Convert zone → annotation
 const annot = meiZone2annotorious(meiDoc, 'zone123', pageUri)

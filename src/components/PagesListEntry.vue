@@ -5,8 +5,8 @@
     <td class="pl">
       <input type="text" v-model="pageLabelValue">
     </td>
-    <td class="img"><img @click="showPage" :src="page.tileSource + '/full/,45/0/default.jpg'"/></td>
-    <td class="uri">{{ page.tileSource }}</td>
+    <td class="img"><img @click="showPage" :src="thumbnailSrc"/></td>
+    <td class="uri">{{ pageUri }}</td>
     <td class="dim">{{ page.dim }}</td>
   </tr>
 </template>
@@ -20,6 +20,17 @@ export default {
     index: Number
   },
   computed: {
+    thumbnailSrc () {
+      const ts = this.page.tileSource
+      if (typeof ts === 'object' && ts !== null) {
+        return ts.url
+      }
+      return ts + '/full/,45/0/default.jpg'
+    },
+    pageUri () {
+      const ts = this.page.tileSource
+      return (typeof ts === 'object' && ts !== null) ? ts.url : ts
+    },
     pageLabelValue: {
       get () {
         return this.page.label

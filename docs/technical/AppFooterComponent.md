@@ -1,25 +1,27 @@
 # AppFooter Component
 
-Displays the application footer, including navigation controls, current mdiv label, zone count, and loading status.
+Displays the application footer, including the current mdiv label, zone count, loading status, and quick links to the About dialog and documentation.
 
 ---
 
 ## Overview
 
 The `AppFooter` component provides:
-- Navigation between pages (previous, next, jump to page)
 - Display of the current mdiv (musical division) label (clickable, opens modal)
 - Display of the number of zones on the current page
 - Loading progress indicator
+- An **About** link (opens the About modal) and a **Docs** link (opens the documentation)
+
+> **Note:** Page navigation (previous/next and jump-to-page) is no longer part of the footer. It now lives in the sidebar, where the current page is an editable input that jumps to the entered page on **Enter** (there is no longer a "Go" button). See the **AppSidebar** documentation.
 
 ---
 
 ## Layout
 
 - **Left**: Current mdiv label (clickable, opens modal)
-- **Center**: Page navigation (prev/next, jump to page)
-- **Right**: Number of zones on current page
+- **Center**: Number of zones on the current page
 - **Progress**: Shows loading progress bar if loading
+- **Right**: About and Docs links
 
 ---
 
@@ -31,9 +33,7 @@ _None_
 
 ## Data
 
-| Name       | Type   | Description                        |
-|------------|--------|------------------------------------|
-| inputPage  | String | User input for page navigation     |
+_None_
 
 ---
 
@@ -41,12 +41,9 @@ _None_
 
 | Name           | Description                                              |
 |----------------|---------------------------------------------------------|
-| currentPage    | Current page number (1-based)                           |
-| maxPage        | Maximum page number                                     |
+| docsUrl        | URL of the documentation. Prefers the build-time `VUE_APP_DOCS_URL` (set for desktop/Android builds, which have no same-origin docs server); falls back to `<origin>/docs` for the web/Docker deployment. |
 | isReady        | Whether the app is ready                                |
 | isLoading      | Whether the app is currently loading                    |
-| prevAvailable  | Whether the previous page is available                  |
-| nextAvailable  | Whether the next page is available                      |
 | zonesCount     | Number of zones on the current page                     |
 | mdivLabel      | Label for the current mdiv (musical division)           |
 
@@ -56,18 +53,8 @@ _None_
 
 | Name            | Description                                                      |
 |-----------------|------------------------------------------------------------------|
-| showPrevPage    | Navigates to the previous page                                   |
-| showNextPage    | Navigates to the next page                                       |
 | showMdivModal   | Opens the mdiv modal dialog                                      |
-| jumpToPage      | Jumps to the page entered by the user                            |
-
----
-
-## Watchers
-
-| Watched Property | Description                                 |
-|------------------|---------------------------------------------|
-| currentPage      | Updates `inputPage` when the page changes   |
+| showAbout       | Opens the About modal dialog                                     |
 
 ---
 

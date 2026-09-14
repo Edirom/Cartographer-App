@@ -1,0 +1,38 @@
+<svg width="160" height="160" viewBox="0 0 160 160" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>cartographer-app icon</title>
+<desc>Square coral-red app icon with a white facsimile page, music staff lines, a translucent blue measure-zone box with corner handles, and a small compass rose.</desc>
+<rect x="0" y="0" width="160" height="160" rx="32" fill="#E84C4C"/>
+<rect x="24" y="28" width="112" height="104" rx="6" fill="#FFFFFF" stroke="#333333" stroke-width="1"/>
+<g stroke="#333333" stroke-width="1.4">
+<line x1="34" y1="48" x2="126" y2="48"/>
+<line x1="34" y1="58" x2="126" y2="58"/>
+<line x1="34" y1="68" x2="126" y2="68"/>
+<line x1="34" y1="78" x2="126" y2="78"/>
+<line x1="34" y1="88" x2="126" y2="88"/>
+</g>
+<g stroke="#333333" stroke-width="1.6">
+<line x1="34" y1="48" x2="34" y2="88"/>
+<line x1="62" y1="48" x2="62" y2="88"/>
+<line x1="96" y1="48" x2="96" y2="88"/>
+<line x1="126" y1="48" x2="126" y2="88"/>
+</g>
+<g fill="#333333">
+<ellipse cx="44" cy="68" rx="3.4" ry="2.6"/>
+<ellipse cx="53" cy="58" rx="3.4" ry="2.6"/>
+<ellipse cx="72" cy="78" rx="3.4" ry="2.6"/>
+<ellipse cx="86" cy="63" rx="3.4" ry="2.6"/>
+<ellipse cx="108" cy="73" rx="3.4" ry="2.6"/>
+</g>
+<rect x="59" y="40" width="40" height="56" fill="rgba(51,87,255,0.2)" stroke="#3357FF" stroke-width="2.2"/>
+<g fill="#3357FF">
+<rect x="56" y="37" width="6" height="6"/>
+<rect x="96" y="37" width="6" height="6"/>
+<rect x="56" y="93" width="6" height="6"/>
+<rect x="96" y="93" width="6" height="6"/>
+</g>
+<g transform="translate(114,114)">
+<path d="M0 -12 L3 0 L0 12 L-3 0 Z" fill="#E84C4C"/>
+<path d="M-12 0 L0 -3 L12 0 L0 3 Z" fill="#333333"/>
+<circle cx="0" cy="0" r="2.2" fill="#FFFFFF" stroke="#333333" stroke-width="1"/>
+</g>
+</svg>

@@ -1,36 +1,70 @@
 import { uuid } from '@/tools/uuid.js'
+
+/**
+ * Normalizes a IIIF label into a single string. Presentation 2 uses a plain
+ * string, while Presentation 3 uses a language map like { en: ['Page 1'] }.
+ * @param {string|Object|Array} label - The raw IIIF label value.
+ * @returns {string} - A single display string.
+ */
+function iiifLabel (label) {
+  if (!label) return ''
+  if (typeof label === 'string') return label
+  if (Array.isArray(label)) return label[0] || ''
+  const langs = Object.keys(label)
+  if (langs.length === 0) return ''
+  const value = label[langs[0]]
+  return Array.isArray(value) ? (value[0] || '') : String(value)
+}
+
+/**
+ * Resolves the image reference for a canvas across IIIF Presentation 2 and 3.
+ * A canvas may point at a IIIF Image API service (base URI, tiled) or at a plain
+ * static image (direct URL, no service).
+ * @param {Object} canvas - The IIIF canvas object.
+ * @param {boolean} hasItems - True for IIIF Presentation 3 (items), false for Presentation 2 (images).
+ * @returns {{uri: string, isPlainImage: boolean, mimetype: string}}
+ */
+function resolveImage (canvas, hasItems) {
+  if (hasItems === true) {
+    // IIIF Presentation 3: canvas -> items[0].items[0].body
+    const body = canvas?.items?.[0]?.items?.[0]?.body
+    const service = body?.service
+    if (Array.isArray(service) && service.length > 0) {
+      return { uri: service[0].id || service[0]['@id'], isPlainImage: false, mimetype: '' }
+    }
+    if (service && (service.id || service['@id'])) {
+      return { uri: service.id || service['@id'], isPlainImage: false, mimetype: '' }
+    }
+    // No image service: the body is a directly loadable image.
+    return { uri: body?.id, isPlainImage: true, mimetype: body?.format || 'image/jpeg' }
+  }
+
+  // IIIF Presentation 2: canvas -> images[0].resource
+  const resource = canvas?.images?.[0]?.resource
+  const service = resource?.service
+  if (service && (service['@id'] || service.id)) {
+    return { uri: service['@id'] || service.id, isPlainImage: false, mimetype: '' }
+  }
+  // No image service: the resource is a directly loadable image.
+  return { uri: resource?.['@id'] || resource?.id, isPlainImage: true, mimetype: resource?.format || 'image/jpeg' }
+}
+
 /**
  * Adds a page (surface) to the MEI file from a IIIF canvas.
  * @param {Object} canvas - The IIIF canvas object.
- * @param {Array} canvases - Array of all canvases (for dimension lookup).
- * @param {Array} dimension - [width, height] for the image.
  * @param {number} n - Page number (1-based).
  * @param {Document} file - The MEI XML document to modify.
  * @param {Document} meiSurfaceTemplate - The MEI surface template XML.
  * @param {boolean} hasItems - True if IIIF Presentation 3 (items), false if Presentation 2 (images).
  */
-function addPage(canvas, canvases, dimension, n, file, meiSurfaceTemplate, hasItems) {
-  // Get the label for the page
-  const label = canvas.label
-  let width, height
+function addPage(canvas, n, file, meiSurfaceTemplate, hasItems) {
+  // Get the label and dimensions for the page directly from the canvas
+  const label = iiifLabel(canvas.label)
+  const width = canvas.width
+  const height = canvas.height
 
-  // Use provided dimensions if available
-  if (n <= canvases.length) {
-    console.log("number is", n, "dimension", dimension, "canvas width", canvas.width, "canvas height", canvas.height)
-    height = dimension[1]
-    width = dimension[0]
-  }
-
-  // Determine the IIIF image info.json URI based on IIIF version
-  let uri = ""
-  if (hasItems === true) {
-    // IIIF Presentation 3
-    console.log("has item is true")
-    uri = canvas?.items[0]?.items[0]?.body?.service[0].id
-  }else{
-    console.log("has item is false")
-     uri = canvas?.images[0]?.resource?.service['@id']
-  }
+  // Determine the image URI (IIIF Image service base or direct image URL)
+  const { uri, isPlainImage, mimetype } = resolveImage(canvas, hasItems)
 
   // Generate unique IDs for surface and graphic
   const surfaceId = 's' + uuid()
@@ -51,6 +85,11 @@ function addPage(canvas, canvases, dimension, n, file, meiSurfaceTemplate, hasIt
   graphic.setAttribute('target', uri)
   graphic.setAttribute('width', width)
   graphic.setAttribute('height', height)
+  // A mimetype marks a directly loadable image (no IIIF Image service) so the
+  // viewer loads it as a plain image instead of fetching a non-existent info.json.
+  if (isPlainImage && uri) {
+    graphic.setAttribute('mimetype', mimetype)
+  }
 
   // Append the new surface to the facsimile section of the MEI file
   file.querySelector('facsimile').appendChild(surface)
@@ -67,10 +106,9 @@ function addPage(canvas, canvases, dimension, n, file, meiSurfaceTemplate, hasIt
  * @param {Object} json - The IIIF manifest JSON.
  * @param {string} url - The manifest URL.
  * @param {DOMParser} parser - XML parser instance.
- * @param {Object} state - Application state (for page dimensions).
  * @returns {Promise<Document>} - Resolves to the generated MEI XML document.
  */
-export async function iiifManifest2mei (json, url, parser, state) {
+export async function iiifManifest2mei (json, url, parser) {
   const promises = []
   let meiFileTemplate
   let meiSurfaceTemplate
@@ -92,7 +130,7 @@ export async function iiifManifest2mei (json, url, parser, state) {
       const sourceId = 's' + uuid()
       // Set file id and metadata
       file.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:id', 'm' + uuid())
-      file.querySelector('title').textContent = json.label
+      file.querySelector('title').textContent = iiifLabel(json.label)
       file.querySelector('source').setAttribute('target', url)
       file.querySelector('source').setAttribute('xml:id', sourceId)
       file.querySelector('change date').setAttribute('isodate', new Date().toISOString().substring(0, 10))
@@ -110,19 +148,16 @@ export async function iiifManifest2mei (json, url, parser, state) {
 
         const composer = metadata.find(entry => { return entry.label === 'Autor' }).value
         file.querySelector('composer persName').textContent = composer
-      } catch (err) {
-        console.log('Apparently, there is no metadata for this IIIF Manifest.')
-      }
-      // Add each page as a surface
-      if(json.sequences){
+      } catch (_) {}
+      // Add each page as a surface. IIIF Presentation 2 exposes canvases under
+      // sequences[0].canvases; Presentation 3 exposes them directly under items.
+      if (Array.isArray(json.sequences) && json.sequences[0] && Array.isArray(json.sequences[0].canvases)) {
         json.sequences[0].canvases.forEach((canvas, i) => {
-          var hasItems = false
-          addPage(canvas, json.sequences[0].canvases, state.pageDimension[i], i + 1, file, meiSurfaceTemplate, hasItems)
+          addPage(canvas, i + 1, file, meiSurfaceTemplate, false)
         })
-      }else{
+      } else if (Array.isArray(json.items)) {
         json.items.forEach((canvas, i) => {
-          var hasItems = true
-          addPage(canvas, i + 1, file, meiSurfaceTemplate, hasItems)
+          addPage(canvas, i + 1, file, meiSurfaceTemplate, true)
         })
       }
       return file
@@ -145,7 +180,6 @@ export function checkIiifManifest (json) {
   const hasId = typeof json['@id'] === 'string' && json['@id'].length > 0
   const hasSequences = Array.isArray(json.sequences)
   const hasItems = Array.isArray(json.items)
-  console.log("has items is " , claimsManifest)
 
   if (hasItems == true) {
     return true
@@ -167,12 +201,42 @@ export function getPageArray (mei) {
   mei.querySelectorAll('surface').forEach((surface, n) => {
     const graphic = surface.querySelector('graphic')
     const obj = {}
-    obj.uri = graphic.getAttributeNS('', 'target').trim()
-    obj.id = surface.getAttribute('xml:id').trim()
-    obj.n = surface.getAttributeNS('', 'n').trim()
-    // obj.label = surface.getAttributeNS('', 'label').trim() // Uncomment if label is needed
-    obj.width = parseInt(graphic.getAttributeNS('', 'width').trim(), 10)
-    obj.height = parseInt(graphic.getAttributeNS('', 'height').trim(), 10)
+
+    // Try multiple ways to get the target attribute
+    let target = null
+    if (graphic) {
+      target = graphic.getAttribute('target') || 
+               graphic.getAttributeNS('', 'target') ||
+               graphic.getAttributeNS('http://www.music-encoding.org/ns/mei', 'target')
+    }
+    
+    obj.uri = target ? target.trim() : null
+    obj.id = surface.getAttribute('xml:id') ? surface.getAttribute('xml:id').trim() : null
+    obj.n = surface.getAttribute('n') ? surface.getAttribute('n').trim() : null
+    obj.label = surface.getAttribute('label') ? surface.getAttribute('label').trim() : null
+    
+    // Get width and height from graphic
+    if (graphic) {
+      const width = graphic.getAttribute('width') || graphic.getAttributeNS('', 'width')
+      const height = graphic.getAttribute('height') || graphic.getAttributeNS('', 'height')
+      obj.width = width ? parseInt(width.trim(), 10) : 0
+      obj.height = height ? parseInt(height.trim(), 10) : 0
+    }
+    
+    // Get width/height from surface as fallback
+    if (!obj.width && surface.getAttribute('lrx')) {
+      obj.width = parseInt(surface.getAttribute('lrx'), 10) - (parseInt(surface.getAttribute('ulx'), 10) || 0)
+    }
+    if (!obj.height && surface.getAttribute('lry')) {
+      obj.height = parseInt(surface.getAttribute('lry'), 10) - (parseInt(surface.getAttribute('uly'), 10) || 0)
+    }
+
+    // A graphic with an image mimetype is a directly loadable image (no IIIF
+    // Image service), so it must be shown as a plain image tile source rather
+    // than by fetching an info.json.
+    const mimetype = graphic ? (graphic.getAttribute('mimetype') || '') : ''
+    obj.isPlainImage = mimetype.startsWith('image/')
+
     obj.hasSvg = surface.querySelector('svg') !== null // true if an SVG exists in this surface
     obj.hasZones = surface.querySelector('zone') !== null // true if any zone exists in this surface
 

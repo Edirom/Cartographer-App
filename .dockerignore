@@ -3,6 +3,10 @@ node_modules
 dist
 .git
 
+# Tauri/Rust build artifacts — not needed for the SPA/docs build and huge
+src-tauri/target
+src-tauri/gen
+
 
 # local env files
 .env.local
@@ -23,8 +27,6 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
-#Electron-builder output
-dist_electron
 /docs/.vuepress/.temp
 /docs/.vuepress/.cache
 /docs/.vuepress/dist

@@ -1,0 +1,137 @@
+name: Test build (artifacts only)
+
+# Builds the desktop apps (macOS .dmg/.app, Windows .exe/.msi,
+# Linux .deb/.AppImage) and uploads them as downloadable workflow ARTIFACTS
+# instead of publishing a GitHub Release. Use this to test the installers on
+# each OS before cutting an actual release with release.yml.
+#
+# Run it manually: GitHub -> Actions -> "Test build (artifacts only)" ->
+# Run workflow -> pick this branch. Download the per-OS zips from the finished
+# run's "Artifacts" section. Artifacts are retained for 14 days.
+#
+# NOTE: The manual "Run workflow" button only appears once this file is on the
+# repository's DEFAULT branch. Until then, the push trigger below builds it
+# automatically on every push to the distribution branch so it can be tested.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 109-feature-cartographer-distribution
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: "--target universal-apple-darwin"
+          - platform: ubuntu-22.04
+            args: ""
+          - platform: windows-latest
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            build-essential \
+            file \
+            libssl-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Cache Rust build artifacts
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Install frontend dependencies
+        # The project has a known peer-dependency conflict (vue3-jest vs
+        # cli-plugin-unit-jest); the Dockerfile uses the same flag.
+        run: npm install --legacy-peer-deps
+
+      - name: Build Tauri app
+        run: npx tauri build ${{ matrix.args }}
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v7
+        with:
+          name: cartographer-${{ matrix.platform }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            src-tauri/target/**/release/bundle/**/*.dmg
+            src-tauri/target/**/release/bundle/**/*.deb
+            src-tauri/target/**/release/bundle/**/*.AppImage
+            src-tauri/target/**/release/bundle/**/*.exe
+            src-tauri/target/**/release/bundle/**/*.msi
+
+  android:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+      - name: Setup Java (JDK 17)
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android NDK
+        run: sdkmanager "ndk;27.2.12479018"
+
+      - name: Setup Rust toolchain (Android targets)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Cache Rust build artifacts
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Install frontend dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build Android APK (debug)
+        run: npx tauri android build --debug --apk
+        env:
+          NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/27.2.12479018
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: cartographer-android
+          if-no-files-found: error
+          retention-days: 14
+          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk

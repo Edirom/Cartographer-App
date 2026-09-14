@@ -1,68 +1,76 @@
 # MainMenu Component
 
-Displays a dropdown menu with actions for file import/export and toggling app features.
-
----
-
-## Overview
-
-The `MainMenu` component provides:
-- A dropdown menu for importing MEI files and IIIF manifests
-- Downloading the current MEI file
-- Showing the page overview modal
-- Toggling the measure list pane
-- Toggling merge mode for existing music (if available)
-- Uses Vuex store for state management and dispatching actions
-
----
+`MainMenu` provides file import and export actions, GitHub integration, page
+controls, and the native GitHub Device Flow prompt.
 
 ## Layout
 
-- **Dropdown Menu**: Triggered by a button with a bars icon
-- **Sections**:
-  - **Data**: Upload MEI, Import IIIF Manifest, Download MEI File
-  - **Actions**: Show Page Overview, Toggle Measure List
-  - **Options**: Toggle Merge Mode (if available)
+The dropdown is opened with the bars button and contains these sections:
 
----
+- **User**: Upload MEI, import IIIF or local images, log in with GitHub, load
+  from GitHub, and download MEI
+- **GitHub branch**: Commit the loaded GitHub file when GitHub file metadata is
+  available
+- **Actions**: Show the page overview and toggle the measure list
+- **Options**: Toggle merge mode when unzoned measures are available
+
+The Device Flow sign-in card is outside the dropdown so it remains visible when
+the menu closes. It is rendered only while `auth.state.devicePrompt` contains a
+verification URL and user code.
 
 ## Props
 
 _None_
 
----
+## Computed properties
 
-## Computed Properties
-
-| Name                   | Description                                              |
-|------------------------|---------------------------------------------------------|
-| accessToken            | GitHub access token from the store                      |
-| directories            | GitHub directories from the store                       |
-| selectedDirectory      | Selected directory from the store                       |
-| manifest               | Current manifest from the store                         |
-| xmlFilename            | Filename for MEI file download                          |
-| downloadAvailable      | True if MEI file is available for download              |
-| isLoggedin             | True if the user is logged in                           |
-| firstMeasureWithoutZone| First measure without a zone (for merge mode)           |
-| existingMusicMode      | Whether merge mode is active                            |
-| getUserName            | Current user's name from the store                      |
-
----
+| Name | Description |
+| --- | --- |
+| `manifest` | Current IIIF manifest from the root store |
+| `xmlFilename` | Filename used when downloading MEI |
+| `downloadAvailable` | Whether generated MEI is available |
+| `firstMeasureWithoutZone` | First measure eligible for merge mode |
+| `existingMusicMode` | Whether merge mode is active |
+| `isAuthenticated` | Authentication status from `auth/isAuthenticated` |
+| `githubFile` | Metadata for the MEI file loaded from GitHub |
+| `selectedBranch` | Branch selected in the authentication module |
+| `githubBranchLabel` | Branch label displayed above the commit action |
+| `devicePrompt` | Native Device Flow URL and temporary user code |
 
 ## Methods
 
-| Name                  | Description                                                      |
-|-----------------------|------------------------------------------------------------------|
-| importXML             | Opens the modal to upload an MEI file                            |
-| importManifest        | Opens the modal to import a IIIF manifest                        |
-| xmlDataUrl            | Returns the data URL for downloading the MEI file                |
-| toggleMeasureList     | Toggles the measure list pane                                    |
-| showPagesModal        | Opens the page overview modal                                    |
-| toggleExistingMusicMode| Toggles merge mode for existing music (if available)            |
+| Name | Description |
+| --- | --- |
+| `importXML` | Opens the MEI upload modal |
+| `importManifest` | Opens the IIIF import modal |
+| `importLocalImage` | Opens the local-image import modal |
+| `loadFromGithub` | Opens the GitHub repository browser |
+| `loginToGithub` | Selects browser OAuth or native Device Flow |
+| `copyDeviceCode` | Copies the temporary Device Flow code |
+| `commitToGithub` | Opens the GitHub commit modal |
+| `xmlDataUrl` | Creates the data URL used to download MEI |
+| `toggleMeasureList` | Shows or hides the measure list |
+| `showPagesModal` | Opens the page overview |
+| `toggleExistingMusicMode` | Toggles merge mode when available |
 
----
+## Authentication behavior
+
+`loginToGithub` checks `window.__TAURI_INTERNALS__`:
+
+- In a browser, it dispatches `auth/login`, which starts OAuth redirect login.
+- In a Tauri desktop or Android application, it dispatches
+  `auth/loginDevice`, which requests a device code through the Rust backend.
+
+During Device Flow, the component displays the verification URL, temporary
+code, copy button, and waiting status. Login errors are shown through an alert.
+The store handles GitHub's polling interval and updates authentication state
+when authorization succeeds.
+
+See [GitHub Authentication](./Auth.md) for the complete browser and native
+flows.
 
 ## Example
 
 ```vue
 <MainMenu />
+```

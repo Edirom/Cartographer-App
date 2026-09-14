@@ -52,7 +52,7 @@ _None_
 | Name         | Description                                                      |
 |--------------|------------------------------------------------------------------|
 | useTestUri   | Sets the input field to a test URI (not used)                    |
-| main         | Triggers import action with the given path                       |
+| main         | Dispatches the `setBranches` action with the given path to load the repository's branches (import logic is currently commented out) |
 | closeModal   | Closes the modal dialog                                          |
 
 ---

@@ -15,7 +15,7 @@ The `AppHeader` component provides:
 
 ## Layout
 
-- **Left**: App name/brand (`CartographerApp`)
+- **Left**: App name/brand (`cartographer-app`)
 - **Right**: Main menu (using the `MainMenu` component)
 
 ---

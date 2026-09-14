@@ -30,8 +30,8 @@ _None_
 
 | Name    | Description                                         |
 |---------|-----------------------------------------------------|
-| visible | Modal visibility, synced with Vuex store            |
-| url     | Manifest URL, synced with Vuex store                |
+| visible | Modal visibility (read-only getter from Vuex store) |
+| url     | Manifest URL, two-way synced with Vuex store        |
 
 ---
 

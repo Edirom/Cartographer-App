@@ -32,7 +32,7 @@
           <div>
             <p>
               The given IIIF Manifest will be converted to an MEI file, holding
-              the information relevant for the Mercator app.
+              the information relevant for the cartographer-app app.
             </p>
           </div>
           <div @click="useTestUri" :title="testUri" class="btn btn-sm">get test uri</div>

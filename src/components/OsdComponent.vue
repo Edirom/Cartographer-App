@@ -110,13 +110,24 @@ export default {
           e.stopPropagation()
         })
         overlay.addEventListener('pointerdown', (e) => {
-          e.preventDefault();
-          overlay.click();
+          if (e.shiftKey || e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          } else {
+            e.preventDefault();
+            overlay.click();
+          }
 
         })
         overlay.addEventListener('click', (e) => {
           console.log('clicked')
           this.$store.dispatch('clickZone', zoneId)
+          
+          if (e.ctrlKey || e.metaKey) {
+            this.$store.dispatch('selectZone', zoneId)
+          }
+          
           e.preventDefault()
           e.stopPropagation()
         })
@@ -143,9 +154,37 @@ export default {
       })
       // this.anno.setAnnotations(annots)
     },
-    toggleSelection: function (mode) {
+    isDrawingMode: function (mode) {
       const activeModes = [allowedModes.manualRect, allowedModes.additionalZone]
-      this.anno.readOnly = activeModes.indexOf(mode) === -1
+      const currentMode = mode !== undefined ? mode : this.mode
+      return activeModes.indexOf(currentMode) !== -1
+    },
+    toggleSelection: function (mode) {
+      const drawing = this.isDrawingMode(mode)
+      this.anno.readOnly = !drawing
+
+      // On touch / small-screen devices there is no Shift key to raise the
+      // drawing layer, so enable it automatically whenever a drawing mode
+      // (manualRect / additionalZone) is active.
+      const annoLayer = document.querySelector('.a9s-annotationlayer.a9s-osd-annotationlayer')
+      if (annoLayer) {
+        annoLayer.classList.toggle('activeSelection', drawing)
+      }
+
+      // Disable OpenSeadragon's own gesture navigation while drawing so that
+      // touch drags reach the annotation layer instead of panning/zooming the
+      // image. Re-enabled for non-drawing tools (e.g. selection) to allow
+      // pan/pinch-zoom on touch devices.
+      if (this.viewer) {
+        this.viewer.setMouseNavEnabled(!drawing)
+      }
+
+      // Annotorious only enables its drawing MouseTracker while the Shift
+      // hotkey is held. Touch devices have no Shift key, so enable/disable the
+      // tracker explicitly based on the active tool instead.
+      if (this.anno) {
+        this.anno.setDrawingEnabled(drawing)
+      }
     }
   },
   mounted: function () {
@@ -178,7 +217,8 @@ export default {
 
     // Initialize the Annotorious plugin
     this.anno = Annotorious(this.viewer, annotoriousConfig)
-    this.anno.setDrawingEnabled(true)
+    // Set the initial drawing state to match the current tool/mode.
+    this.toggleSelection(this.mode)
 
 
     // Load annotations in W3C WebAnnotation format
@@ -193,7 +233,9 @@ export default {
       }
     } 
     const shiftKeyUp = (e) => {
-      if (e.keyCode === 16) {
+      // Keep the drawing layer active when a drawing mode is selected, so
+      // releasing Shift on desktop does not disable an active draw tool.
+      if (e.keyCode === 16 && !this.isDrawingMode()) {
         annoLayer.classList.remove('activeSelection')
       }
     }
@@ -215,15 +257,10 @@ export default {
     })
 
     this.anno.on('selectAnnotation', async (annotation) => {
-      // The users has selected an existing annotation
-      // console.log('selected annotation')
       // console.log(annotation)
-
     })
 
     this.anno.on('createAnnotation', (annotation) => {
-
-
      // const { x, y, width, height } = annotation.shapes[0].geometry;
 
       // Update the x and y coordinates of the rectangle
@@ -238,10 +275,13 @@ export default {
       this.$store.dispatch('selectZone', null)
       this.anno.clearAnnotations()
       this.renderZones()
-      console.log("anno is clicked ", annotation.target.selector)  
-
-  
-
+      // Annotorious disables its drawing tracker after each completed shape
+      // (it normally waits for the Shift hotkey again). Re-enable it so the
+      // user can keep drawing on touch devices without a keyboard.
+      if (this.isDrawingMode()) {
+        this.anno.setDrawingEnabled(true)
+      }
+      console.log("anno is clicked ", annotation.target.selector)
     })
 
     this.anno.on('updateAnnotation', (annotation) => {
@@ -264,7 +304,32 @@ export default {
 
     this.unwatchPages = this.$store.watch((state, getters) => getters.pages,
       (newArr, oldArr) => {
-        this.viewer.open(newArr)
+        console.log('Pages changed in OsdComponent, count:', newArr.length)
+        if (!newArr || newArr.length === 0) {
+          // Reset / no pages loaded: tear down the currently displayed image.
+          // viewer.open([]) does NOT clear an already-open image, so close it
+          // explicitly and remove any zone overlays / annotations.
+          this.viewer.clearOverlays()
+          if (this.anno) {
+            this.anno.clearAnnotations()
+          }
+          this.viewer.close()
+          return
+        }
+        // A string tile source is a IIIF Image API service base. OpenSeadragon
+        // does not append /info.json itself, so add it here (some servers, e.g.
+        // Gallica, return 404 for the bare service base). Object tile sources
+        // (plain/local images) are passed through unchanged.
+        const normalized = newArr.map(page => {
+          const ts = page.tileSource
+          if (typeof ts === 'string') {
+            const base = ts.replace(/\/$/, '')
+            const src = /\/info\.json$/i.test(base) ? base : base + '/info.json'
+            return { ...page, tileSource: src }
+          }
+          return page
+        })
+        this.viewer.open(normalized)
         this.$store.dispatch('setCurrentPage', 0)
       })
 
@@ -309,6 +374,7 @@ $thickLineColor: #cccccc66; // #ffffff99;
 
 #osdContainer {
   height: calc(100vh - $appHeaderHeight - $appFooterHeight);
+  height: calc(100dvh - #{$appHeaderHeight} - #{$appFooterHeight} - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   width: calc(100% - $appSidebarWidth - $contentPreviewPaneWidth);
 
   &.fullWidth {
@@ -328,6 +394,10 @@ $thickLineColor: #cccccc66; // #ffffff99;
 
   .a9s-annotationlayer.a9s-osd-annotationlayer.activeSelection {
     z-index: 12;
+    // Let touch drags reach the drawing layer instead of being consumed as a
+    // browser pan/scroll gesture (required for drawing on touch devices).
+    touch-action: none;
+    pointer-events: all;
   }
 
   .zone {

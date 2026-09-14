@@ -1,0 +1,83 @@
+version: 2
+updates:
+  # Frontend / app dependencies (root package.json)
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      # Font Awesome packages must be upgraded in lockstep (icon packages
+      # must match the core's major version), so bundle ALL updates to
+      # them — including majors — into one PR.
+      fontawesome:
+        patterns:
+          - "@fortawesome/*"
+      # Batch low-risk dev-tooling bumps into a single PR to reduce noise.
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      # Batch low-risk production bumps (e.g. core-js) the same way.
+      # Majors still arrive as individual PRs for case-by-case review.
+      prod-minor-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+    # Majors we've consciously deferred; delete an entry when ready to tackle it.
+    ignore:
+      - dependency-name: "openseadragon"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vue-router"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@babel/core"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "ts-jest"
+        update-types: ["version-update:semver-major"]
+
+  # Documentation site dependencies (docs/package.json)
+  - package-ecosystem: npm
+    directory: "/docs"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      docs-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  # Rust / Tauri backend
+  - package-ecosystem: cargo
+    directory: "/src-tauri"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # serde & friends bump patch versions constantly; one PR per week is plenty.
+      cargo-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  # GitHub Actions workflow pins
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      # Actions bumps are near-uniform in risk; review them as one PR.
+      actions:
+        patterns:
+          - "*"
+
+  # Container base image
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]

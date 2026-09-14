@@ -5,6 +5,5 @@ export const mode = {
   splitHorizontal: 'splitHorizontal',
   additionalZone: 'additionalZone',
   deletion: 'deletion',
-  mdiv: 'mdiv',
-  login: 'login'
+  mdiv: 'mdiv'
 }

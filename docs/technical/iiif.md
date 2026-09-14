@@ -73,10 +73,11 @@ Extracts an array of page objects from an MEI XML document.
 
 **Returns:**  
 - `{Array}` — Array of page objects with:  
-  - `uri` — Image target URI  
+  - `uri` — Image target URI (from `graphic/@target`)  
   - `id` — MEI surface ID  
   - `n` — Page number  
-  - `width`, `height` — Dimensions  
+  - `label` — Surface label  
+  - `width`, `height` — Dimensions (from the graphic, falling back to the surface `lrx`/`lry` minus `ulx`/`uly`)  
   - `hasSvg` — Whether the surface has an embedded SVG  
   - `hasZones` — Whether the surface contains zones  
 

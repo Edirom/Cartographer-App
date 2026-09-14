@@ -1,17 +1,30 @@
 <template>
   <div class="appSidebar">
+    <div class="toolButtons">
     <!-- SELECT -->
     <button class="btn btn-action" :class="{'activeMode': mode === 'selection'}"
-      title="select measure" :disabled="!isReady"
+      title="select measure (s)" :disabled="!isReady"
       @click="activateMode('selection')">
       <font-awesome-icon icon="fa-solid fa-arrow-pointer"/>
     </button>
 
     <!-- DRAW -->
     <button class="btn btn-action"  :class="{'activeMode': mode === 'manualRect'}"
-      title="draw measures" :disabled="!isReady"
+      title="draw measures (d)" :disabled="!isReady"
       @click="activateMode('manualRect')">
       <font-awesome-icon icon="fa-solid fa-pen"/>
+    </button>
+
+    <!-- UNDO -->
+    <button class="btn btn-action" title="undo changes" :disabled="!canUndo"
+      @click="undoChanges">
+      <font-awesome-icon icon="fa-solid fa-rotate-left"/>
+    </button>
+
+    <!-- REDO -->
+    <button class="btn btn-action" title="redo changes" :disabled="!canRedo"
+      @click="redoChanges">
+      <font-awesome-icon icon="fa-solid fa-rotate-right"/>
     </button>
 
     <!-- RECTANGLE -->
@@ -36,7 +49,7 @@
     <!-- ADDITIONAL ZONE PER MEASURE -->
       <!-- @click="activateMode('additionalZone')"> -->
     <button class="btn btn-action"  :class="{'activeMode': mode === 'additionalZone'}"
-      title="add zone to last measure"
+      title="add zone to last measure (a)"
       :disabled="!isReady || measures.length === 0"
       @click="activateMode('additionalZone')">
       <template v-if="mode === 'additionalZone'">
@@ -49,7 +62,7 @@
 
     <!-- DELETE MEASURE -->
     <button class="btn btn-action"  :class="{'activeMode': mode === 'deletion'}"
-      title="delete measure" :disabled="!isReady"
+      title="delete measure (x)" :disabled="!isReady"
       @click="activateMode('deletion')">
       <font-awesome-icon icon="fa-solid fa-eraser"/>
     </button>
@@ -94,14 +107,19 @@
 
     </div>
 
+    </div>
+
     <div class="pageNav">
       <label>Page</label>
-      <span class="currentPage">{{ currentPage }}</span>
+      <input type="text" class="currentPageInput" v-model="inputPage"
+        :placeholder="String(currentPage)"
+        v-on:keyup.enter="jumpToPage()"
+        title="Enter a page number and press Enter to jump"/>
       <span class="maxPage">of {{ maxPage }}</span>
-      <span class="pageBtn" @click="showPrevPage" :disabled="!prevAvailable">
+      <span class="pageBtn" :class="{ disabled: !prevAvailable }" @click="showPrevPage">
         <font-awesome-icon icon="fa-solid fa-angle-left" />
       </span>
-      <span class="pageBtn" @click="showNextPage" :disabled="!nextAvailable">
+      <span class="pageBtn" :class="{ disabled: !nextAvailable }" @click="showNextPage">
         <font-awesome-icon icon="fa-solid fa-angle-right" />
       </span>
     </div>
@@ -139,6 +157,11 @@ export default {
   components: {
 
   },
+  data: function () {
+    return {
+      inputPage: ''
+    }
+  },
   computed: {
     isReady: function () {
       return this.$store.getters.isReady
@@ -163,16 +186,58 @@ export default {
     },
     measures: function () {
       return this.$store.getters.measures
+    },
+    canUndo: function () {
+      return this.$store.getters.canUndo
+    },
+    canRedo: function () {
+      return this.$store.getters.canRedo
     }
     /* visible: function() {
       return this.$store.getters.imageSelectionModalVisible
     } */
   },
+  watch: {
+    currentPage: function (newPage) {
+      this.inputPage = newPage
+    }
+  },
+  mounted: function () {
+    this.inputPage = this.currentPage
+  },
   methods: {
+    jumpToPage: function () {
+      const raw = String(this.inputPage).trim()
+      const maxPage = this.$store.getters.maxPageNumber
+      let message = null
+      if (raw === '') {
+        message = 'Please enter a page number.'
+      } else if (!/^-?\d+$/.test(raw)) {
+        message = 'Page must be a whole number.'
+      } else {
+        const page = parseInt(raw, 10)
+        if (page <= 0) {
+          message = 'Page number must be 1 or greater.'
+        } else if (page > maxPage) {
+          message = `Page number is out of range. Enter a value between 1 and ${maxPage}.`
+        } else {
+          this.$store.dispatch('setCurrentPage', page - 1)
+          return
+        }
+      }
+      this.$store.dispatch('notifications/notify', { message, type: 'warning' })
+      this.inputPage = this.currentPage
+    },
     showPrevPage: function () {
+      if (!this.prevAvailable) {
+        return
+      }
       this.$store.dispatch('setCurrentPage', this.$store.getters.currentPageIndexZeroBased - 1)
     },
     showNextPage: function () {
+      if (!this.nextAvailable) {
+        return
+      }
       this.$store.dispatch('setCurrentPage', this.$store.getters.currentPageIndexZeroBased + 1)
     },
     autoDetect: function () {
@@ -199,6 +264,12 @@ export default {
       } else {
         console.error('mode ' + mode + ' is not known. Please check AppSidebar.vue and @/store/index.js.')
       }
+    },
+    undoChanges: function () {
+      this.$store.dispatch('undo')
+    },
+    redoChanges: function () {
+      this.$store.dispatch('redo')
     }
   }
 }
@@ -209,10 +280,25 @@ export default {
 
 .appSidebar {
   height: calc(100vh - $appHeaderHeight - $appFooterHeight);
+  height: calc(100dvh - #{$appHeaderHeight} - #{$appFooterHeight} - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   width: $appSidebarWidth;
   background-color: $appColor;
   float: right;
   padding-top: .4rem;
+  box-sizing: border-box;
+  // Lay the sidebar out as a column so the page navigation can be pinned to
+  // the bottom and stay clickable, while the tool buttons take the remaining
+  // space and scroll on short viewports (instead of overflowing behind the
+  // footer, which would swallow the prev/next clicks).
+  display: flex;
+  flex-direction: column;
+
+  .toolButtons {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
 
   button {
     color: $fontColorDark;
@@ -233,6 +319,7 @@ export default {
   }
 
   .pageNav {
+    flex: 0 0 auto;
     background-color: #ffffff;
     border: 0.05rem solid #000000;
     border-radius: 2px;
@@ -243,9 +330,18 @@ export default {
       font-weight: 100;
       font-size: .5rem;
     }
-    .currentPage {
+    .currentPageInput {
       display: block;
+      width: 80%;
+      margin: 0 auto;
       font-weight: 300;
+      text-align: center;
+      border: $thinBorder;
+      border-radius: 2px;
+      padding: 0;
+      font-size: .7rem;
+      line-height: 1rem;
+      box-sizing: border-box;
     }
 
     .maxPage {
@@ -257,6 +353,13 @@ export default {
 
     .pageBtn {
       padding: 0 .1rem;
+      cursor: pointer;
+
+      &.disabled {
+        opacity: .35;
+        cursor: default;
+        pointer-events: none;
+      }
     }
   }
 }

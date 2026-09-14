@@ -54,7 +54,8 @@ _None_
 |-----------------|------------------------------------------------------------------|
 | getNextColor    | Returns the next color for mdiv overlays                        |
 | renderZones     | Renders annotation overlays for all zones on the current page    |
-| toggleSelection | Enables/disables annotation selection based on mode              |
+| isDrawingMode   | Returns whether the given (or current) mode is a drawing mode (`manualRect` or `additionalZone`) |
+| toggleSelection | Enables/disables drawing based on mode: sets Annotorious read-only state, toggles the active drawing layer, OpenSeadragon gesture navigation, and Annotorious drawing tracker |
 
 ---
 

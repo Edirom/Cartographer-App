@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    ports:
+      - '8080:80'
+    environment:
+      - APP_PUBLIC_PATH=${APP_PUBLIC_PATH:-/}
+      - GH_APP_CLIENT_ID=${GH_APP_CLIENT_ID}
+      # Client secret is consumed by nginx (40-create-ghcred.sh) for the
+      # server-side token exchange; it is never shipped in the SPA bundle.
+      - GH_APP_CLIENT_SECRET=${GH_APP_CLIENT_SECRET}
+      - GH_APP_CALL_BACK=${GH_APP_CALL_BACK:-http://localhost:8080/myAppPlaceholder/callback}

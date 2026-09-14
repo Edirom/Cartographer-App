@@ -1,0 +1,219 @@
+name: Release apps
+
+# Builds installable desktop apps (Windows .exe / .msi, Linux .deb / .AppImage)
+# and a signed Android APK / AAB, then attaches them to a GitHub Release so
+# users can download and install Cartographer App without a browser or dev
+# server.
+#
+# Trigger by pushing a version tag, e.g.:
+#   git tag v0.1.0 && git push origin v0.1.0
+# or run it manually from the Actions tab (workflow_dispatch).
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+# Needed so tauri-action can create the GitHub Release and upload assets.
+permissions:
+  contents: write
+
+# Desktop/Android builds have no same-origin docs server, so the docs link in
+# the app footer is pointed at the hosted docs at build time (see AppFooter.vue).
+env:
+  RELEASE_DOCS_URL: https://cartographer-app.zenmem.de/docs/
+
+jobs:
+  build:
+    # Only build the full desktop matrix on version tags or manual runs (skips
+    # the heavy matrix on plain branch pushes, e.g. from pull requests).
+    if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            args: ""
+          - platform: windows-latest
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            build-essential \
+            file \
+            libssl-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build artifacts
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Install frontend dependencies
+        # The project has a known peer-dependency conflict (vue3-jest vs
+        # cli-plugin-unit-jest); the Dockerfile uses the same flag.
+        run: npm install --legacy-peer-deps
+
+      - name: Build and release Tauri app
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VUE_APP_DOCS_URL: ${{ env.RELEASE_DOCS_URL }}
+          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+        with:
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', github.run_number) }}
+          releaseName: "Cartographer App ${{ github.ref_type == 'tag' && github.ref_name || github.run_number }}"
+          releaseBody: "Download the installer for your platform below. See the assets for Windows (.exe/.msi) and Linux (.deb/.AppImage)."
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+  # Builds a signed Android APK (direct install) and AAB (Play Store) and
+  # attaches them to the same GitHub Release. Requires these repository secrets:
+  #   ANDROID_KEYSTORE_BASE64    - the release.keystore, base64-encoded
+  #   ANDROID_KEYSTORE_PASSWORD  - keystore (store) password
+  #   ANDROID_KEY_ALIAS          - key alias (e.g. "upload")
+  #   ANDROID_KEY_PASSWORD       - key password
+  android:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+      - name: Setup Java (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager --install "ndk;27.2.12479018"
+          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.2.12479018" >> "$GITHUB_ENV"
+
+      - name: Setup Rust toolchain (Android targets)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Cache Rust build artifacts
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Install frontend dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Decode signing keystore and write keystore.properties
+        # Pass secrets via env (not inline ${{ }}) so the shell never expands or
+        # mangles special characters like $, ] or & in passwords, and to avoid
+        # script injection. printf writes the values verbatim.
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KS_STORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KS_KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          mkdir -p .signing
+          # Strip any whitespace/newlines a copy-paste may have introduced before decoding.
+          printf '%s' "$KS_B64" | tr -d '[:space:]' | base64 -d > .signing/release.keystore
+          if [ ! -s .signing/release.keystore ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is empty or not valid base64."
+            exit 1
+          fi
+          {
+            printf 'storeFile=%s\n' "$GITHUB_WORKSPACE/.signing/release.keystore"
+            printf 'keyAlias=%s\n'  "$KS_ALIAS"
+            printf 'storePassword=%s\n' "$KS_STORE_PASS"
+            printf 'keyPassword=%s\n'   "$KS_KEY_PASS"
+          } > .signing/keystore.properties
+
+      - name: Verify keystore and password (fail fast)
+        env:
+          KS_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KS_STORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if ! keytool -list -keystore .signing/release.keystore \
+                -storepass "$KS_STORE_PASS" -alias "$KS_ALIAS" >/dev/null 2>err.log; then
+            echo "::error::Keystore/password/alias mismatch. Check the ANDROID_KEYSTORE_* secrets."
+            echo "--- keytool output ---"; cat err.log
+            exit 1
+          fi
+          echo "Keystore OK: alias '$KS_ALIAS' opens with the provided password."
+
+
+      - name: Build signed APK + AAB
+        env:
+          VUE_APP_DOCS_URL: ${{ env.RELEASE_DOCS_URL }}
+          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+        run: |
+          # The Android project is committed; only init if it's somehow missing.
+          [ -f src-tauri/gen/android/gradlew ] || npx tauri android init --skip-targets-install
+          ./scripts/android-sign-inject.sh
+          npx tauri android build
+
+      - name: Collect artifacts
+        id: artifacts
+        run: |
+          mkdir -p dist-android
+          # Name artifacts after the app version from package.json.
+          ver="v$(node -p "require('./package.json').version")"
+          cp src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk \
+             "dist-android/Cartographer-App-${ver}-universal.apk"
+          cp src-tauri/gen/android/app/build/outputs/bundle/universalRelease/*.aab \
+             "dist-android/Cartographer-App-${ver}-universal.aab"
+          ls -lh dist-android
+
+      # Always upload as downloadable run artifacts. This lets you test the whole
+      # build+sign pipeline via a manual "Run workflow" (workflow_dispatch)
+      # WITHOUT creating any GitHub Release — grab the files from the run summary.
+      - name: Upload Android build as run artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ github.ref_type == 'tag' && github.ref_name || format('run-{0}', github.run_number) }}
+          path: dist-android/*
+          if-no-files-found: error
+
+      # Only attach to a GitHub Release when a real version tag is pushed.
+      - name: Attach Android artifacts to the Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: |
+            dist-android/*.apk
+            dist-android/*.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
