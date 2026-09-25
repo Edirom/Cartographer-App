@@ -36,6 +36,7 @@ export default {
     } */
   },
   methods: {
+    // Selects this mdiv in the store and navigates to the first zone of the first measure
     selectAndJumpToMdiv: function () {
       this.$store.dispatch("setCurrentMdiv", this.mdiv.id);
       const measures = this.$store.getters.measuresByMdivId(this.mdiv.id);
@@ -49,6 +50,7 @@ export default {
         }
       }
     },
+    // Searches the XML document for a zone by ID and returns the page index of its parent surface
     findPageIndexByZoneId: function (zoneId) {
       if (!this.$store.getters.isReady) return -1;
 
