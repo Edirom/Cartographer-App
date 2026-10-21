@@ -954,21 +954,27 @@ export default createStore({
     },
     async autoDetectZonesOnCurrentPage({ commit, state }) {
       const pageIndex = state.currentPage
-      const imageUri = state.pages[pageIndex].uri.replace(/\/info\.json/, '') + '/full/full/0/default.jpg'
-      const blob = await fetch(imageUri).then(r => r.blob())
+      const page = state.pages[pageIndex]
+      const uri = page.uri || ''
+      const isDirectImage = uri.startsWith('blob:') || /^https?:\/\/raw\.githubusercontent\.com\//.test(uri)
+      let blob
       try {
-        const pageIndex = state.currentPage;
-        const imageUri = state.pages[pageIndex].uri.replace(/\/info\.json/, '') + '/full/full/0/default.jpg';
-        const response = await fetch(imageUri);
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+        if (page.isLocalImage && page._file) {
+          // image loaded from a local folder: send the original file
+          blob = page._file
+        } else {
+          const imageUri = (page.isLocalImage && page.imageUrl) ? page.imageUrl
+            : (isDirectImage || page.isPlainImage) ? uri
+            : uri.replace(/\/info\.json$/, '') + '/full/full/0/default.jpg' // IIIF
+          const response = await fetch(imageUri)
+          if (!response.ok) throw new Error(`HTTP ${response.status} for ${imageUri}`)
+          blob = await response.blob()
         }
-        const blob = await response.blob();
-        // Further processing with the blob
-    } catch (error) {
-        console.error('Error fetching image blob:', error);
-        // Handle the error gracefully
-    }
+      } catch (error) {
+        console.error('Autodetect: could not load page image:', error)
+        alert('Automatic measure detection failed: the page image could not be loaded.')
+        return
+      }
       const successFunc = (json) => {
         commit('SET_LOADING', false)
         // do some sorting here, if necessary
