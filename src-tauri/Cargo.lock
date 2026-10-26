@@ -3,12 +3,6 @@
 version = 3
 
 [[package]]
-name = "adler"
-version = "1.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
-
-[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -812,7 +806,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
 dependencies = [
  "crc32fast",
- "miniz_oxide 0.8.9",
+ "miniz_oxide",
 ]
 
 [[package]]
@@ -1394,12 +1388,12 @@ dependencies = [
 
 [[package]]
 name = "ico"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e795dff5605e0f04bff85ca41b51a96b83e80b281e96231bcaaf1ac35103371"
+checksum = "d75e94d66081e4d8dcd098bd8dc5254800fea14a26389b298410158d834de167"
 dependencies = [
  "byteorder",
- "png 0.17.6",
+ "png",
 ]
 
 [[package]]
@@ -1772,15 +1766,6 @@ checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
 name = "miniz_oxide"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96590ba8f175222643a85693f33d26e9c8a015f599c216509b1a6894af675d34"
-dependencies = [
- "adler",
-]
-
-[[package]]
-name = "miniz_oxide"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
@@ -1815,7 +1800,7 @@ dependencies = [
  "objc2-core-foundation",
  "objc2-foundation 0.3.2",
  "once_cell",
- "png 0.18.1",
+ "png",
  "serde",
  "thiserror 2.0.18",
  "windows-sys 0.61.2",
@@ -2300,18 +2285,6 @@ dependencies = [
 
 [[package]]
 name = "png"
-version = "0.17.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f0e7f4c94ec26ff209cee506314212639d6c91b80afb82984819fafce9df01c"
-dependencies = [
- "bitflags 1.3.2",
- "crc32fast",
- "flate2",
- "miniz_oxide 0.5.4",
-]
-
-[[package]]
-name = "png"
 version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60769b8b31b2a9f263dae2776c37b1b28ae246943cf719eb6946a1db05128a61"
@@ -2320,7 +2293,7 @@ dependencies = [
  "crc32fast",
  "fdeflate",
  "flate2",
- "miniz_oxide 0.8.9",
+ "miniz_oxide",
 ]
 
 [[package]]
@@ -2925,9 +2898,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.152"
+version = "1.0.154"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1741ab7a6cc54a03a89b5d563ed60075c277d9e3cfa73ad0c1f23f23974703c6"
+checksum = "e7e9cc8b1b85264074fbcc02a88680c4096b1e47df8f739dceb03bf482f04bd6"
 dependencies = [
  "itoa",
  "memchr",
@@ -3137,6 +3110,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
+name = "static_vcruntime"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff7589a1859b09232522bb9edf076ca7fcf14ded96685d3fa629db73023ffbb7"
+
+[[package]]
 name = "string_cache"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3301,9 +3280,9 @@ dependencies = [
 
 [[package]]
 name = "tauri"
-version = "2.12.2"
+version = "2.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d061d042ccd2df9c9f1508c1e63d835278c0a4c8801eb41764080e51f2eaaf34"
+checksum = "5fb0244332cfb9cee7e2a568bf5da29a36ed8fdbd717f6f47a66b6b7b358c072"
 dependencies = [
  "anyhow",
  "bytes",
@@ -3352,9 +3331,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-build"
-version = "2.7.2"
+version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2eea0b6302f82c574b21af6fc6ae6e86183b9280853c22621d0abf0936911ffc"
+checksum = "adddb0e648752aaac5da9c3c3c6a68e1e87cab55e3b757b18a9441ef8c3ac614"
 dependencies = [
  "anyhow",
  "cargo_toml",
@@ -3366,6 +3345,8 @@ dependencies = [
  "semver 1.0.28",
  "serde",
  "serde_json",
+ "static_vcruntime",
+ "strsim",
  "tauri-utils",
  "tauri-winres",
  "walkdir",
@@ -3373,16 +3354,16 @@ dependencies = [
 
 [[package]]
 name = "tauri-codegen"
-version = "2.7.2"
+version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02f468f9a9bcd404f57e5c191d91024e3de953d4b610f78c2907e7110615cb1c"
+checksum = "fb37631cf71dab5e8ab55e1bdd701e18a52653d90b78e71d0e5598b1e0a61316"
 dependencies = [
  "base64 0.23.1",
  "brotli",
  "ico",
  "json-patch",
  "plist",
- "png 0.18.1",
+ "png",
  "proc-macro2",
  "quote",
  "semver 1.0.28",
@@ -3400,9 +3381,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-macros"
-version = "2.7.2"
+version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "131bffec939b20642380317f8403a33c8888489925e14bb965ceaff0d949b1cb"
+checksum = "0cc38db58854c10fb5f91a887ed8bf82d3239bb92b5d8db86eda09e96d9963d1"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -3414,9 +3395,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-runtime"
-version = "2.12.1"
+version = "2.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2a57a2a9b8c8b7fc00d35b510fe808ded7f9f1b44fc1cdda6aee38632ea5413"
+checksum = "7c55766d99cea69055904d1735b93c2049302b2e09effd462120deb5581d78e9"
 dependencies = [
  "cookie",
  "dpi",
@@ -3439,9 +3420,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-runtime-wry"
-version = "2.12.1"
+version = "2.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f9e7e0c9f80a5130773cfabb6df4dc924518fb1b2c923726966804634b57d22"
+checksum = "e1aa9d8b7a120f879f44fdc1053f7b7dbf416bf0bbc6a72b714dec46b782b52f"
 dependencies = [
  "gtk",
  "http",
@@ -3449,7 +3430,6 @@ dependencies = [
  "log",
  "objc2 0.6.4",
  "objc2-app-kit",
- "once_cell",
  "percent-encoding",
  "raw-window-handle",
  "softbuffer",
@@ -3465,9 +3445,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-utils"
-version = "2.10.1"
+version = "2.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ff55a614843b9a3f010f211df637c94df2607175b8d0f6e0f4a7c19e18621ee"
+checksum = "362ab21cd4cc713f2a02b1a9b5688198b1541cfb6907c4281e9190e0f0ef4aa3"
 dependencies = [
  "anyhow",
  "brotli",
@@ -3810,7 +3790,7 @@ dependencies = [
  "objc2-core-graphics",
  "objc2-foundation 0.3.2",
  "once_cell",
- "png 0.18.1",
+ "png",
  "serde",
  "thiserror 2.0.18",
  "windows-sys 0.61.2",
