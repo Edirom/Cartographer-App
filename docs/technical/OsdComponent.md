@@ -20,6 +20,11 @@ The `OsdComponent` component:
 - **Viewer**: Main image viewer (`#osdContainer`), full width or reduced if measure list is visible.
 - **Overlays**: Annotation zones rendered as overlays with labels.
 
+Zone selectors and saved MEI coordinates use image pixels. Overlays are converted
+to viewport coordinates through the currently loaded OpenSeadragon `TiledImage`,
+not the manifest's canvas dimensions (which can differ from the image resolution).
+Page changes clear overlays; the image `open` event renders them for the new image.
+
 ---
 
 ## Props
