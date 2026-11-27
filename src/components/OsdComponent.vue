@@ -44,6 +44,9 @@ export default {
     },
     renderZones: function () {
       this.viewer.clearOverlays()
+      const tiledImage = this.viewer.world.getItemAt(0)
+      if (!tiledImage) return
+
       const annots = this.$store.getters.zonesOnCurrentPage
       annots.forEach(annot => {
         // console.log('trying to render zone based on: ')
@@ -149,7 +152,8 @@ export default {
 
         this.viewer.addOverlay({
           element: overlay,
-          location: new OpenSeadragon.Rect(xywh.x, xywh.y, xywh.w, xywh.h)
+          // IIIF canvas dimensions may differ from the loaded image's pixels.
+          location: tiledImage.imageToViewportRectangle(xywh.x, xywh.y, xywh.w, xywh.h)
         })
       })
       // this.anno.setAnnotations(annots)
@@ -299,7 +303,7 @@ export default {
 
     this.viewer.addHandler('page', (data) => {
       this.anno.clearAnnotations()
-      this.renderZones()
+      this.viewer.clearOverlays()
     })
 
     this.unwatchPages = this.$store.watch((state, getters) => getters.pages,
